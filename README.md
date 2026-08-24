@@ -1,0 +1,1 @@
+End-to-end CDC and analytics pipeline streaming sales and inventory data from PostgreSQL through Debezium and Kafka into Snowflake, with dbt transformations and dimensional modeling.
