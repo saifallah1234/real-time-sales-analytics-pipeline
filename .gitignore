@@ -1,2 +1,8 @@
 .venv/
 logs/
+data/
+.env
+__pycache__/
+uv.lock
+.python-version
+target/
