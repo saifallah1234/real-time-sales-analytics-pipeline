@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: postgres_raw
+    database: CDC_DATABASE
+    schema: RAW_DATA
+    description: "Raw tables manually extracted from PostgreSQL."
+
+    tables:
+      - name: customer
+        identifier: CUSTOMER
+
+      - name: supplier
+        identifier: SUPPLIER
+
+      - name: product
+        identifier: PRODUCT
+
+      - name: sales_invoice
+        identifier: SALES_INVOICE
+
+      - name: sales_invoice_item
+        identifier: SALES_INVOICE_ITEM
+
+      - name: purchase_bill
+        identifier: PURCHASE_BILL
+
+      - name: purchase_bill_item
+        identifier: PURCHASE_BILL_ITEM
+
+      - name: inventory_movement
+        identifier: INVENTORY_MOVEMENT

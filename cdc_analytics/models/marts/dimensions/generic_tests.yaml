@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Dimension table containing customer attributes."
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_id
+
+      - name: first_name
+        tests:
+          - not_null
+
+      - name: last_name
+        tests:
+          - not_null
+
+      - name: email
+        tests:
+          - not_null
+          - unique
+
+      - name: created_at
+        tests:
+          - not_null
+
+  - name: dim_supplier
+    description: "Dimension table containing supplier attributes."
+    columns:
+      - name: supplier_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_supplier')
+                field: supplier_id
+
+      - name: name
+        tests:
+          - not_null
+
+      - name: contact_email
+        tests:
+          - unique
+
+      - name: contact_phone
+        tests:
+          - unique
+
+      - name: created_at
+        tests:
+          - not_null
+
+  - name: dim_product
+    description: "Dimension table containing product attributes and inventory balance."
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_id
+
+      - name: name
+        tests:
+          - not_null
+
+      - name: unit_price
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: "Calendar dimension with one row per date."
+    columns:
+      - name: date_key
+        tests:
+          - not_null
+          - unique
+
+      - name: date_day
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        tests:
+          - not_null
+
+      - name: quarter
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4]
+                quote: false
+
+      - name: month_number
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                quote: false
+
+      - name: month_name
+        tests:
+          - not_null
+
+      - name: week_number
+        tests:
+          - not_null
+
+      - name: day_of_month
+        tests:
+          - not_null
+
+      - name: day_name
+        tests:
+          - not_null
