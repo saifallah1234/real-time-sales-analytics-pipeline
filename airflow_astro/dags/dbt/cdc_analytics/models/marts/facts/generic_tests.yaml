@@ -1,0 +1,171 @@
+version: 2
+
+models:
+  - name: fact_sales
+    description: "Fact table for sales invoice line items."
+    columns:
+      - name: item_id
+        tests:
+          - not_null
+          - unique
+
+      - name: invoice_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sales_invoice')
+                field: invoice_id
+              config:
+                severity: warn
+
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_id
+
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_id
+
+      - name: invoice_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: quantity
+        tests:
+          - not_null
+
+      - name: unit_price
+        tests:
+          - not_null
+
+      - name: gross_amount
+        tests:
+          - not_null
+
+      - name: net_amount
+        tests:
+          - not_null
+
+      - name: invoice_status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Pending', 'Paid', 'Cancelled', 'Overdue']
+
+  - name: fact_purchases
+    description: "Fact table for purchase bill line items."
+    columns:
+      - name: item_id
+        tests:
+          - not_null
+          - unique
+
+      - name: bill_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_purchase_bill')
+                field: bill_id
+              config:
+                severity: warn
+
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_id
+
+      - name: supplier_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_supplier')
+                field: supplier_id
+
+      - name: bill_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: quantity
+        tests:
+          - not_null
+
+      - name: unit_price
+        tests:
+          - not_null
+
+      - name: gross_amount
+        tests:
+          - not_null
+
+      - name: paid_amount
+        tests:
+          - not_null
+
+      - name: bill_status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Pending', 'Paid', 'Cancelled', 'Partially Paid']
+
+  - name: fct_inventory_movements
+    description: "Fact table for individual inventory movements."
+    columns:
+      - name: movement_id
+        tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_id
+
+      - name: movement_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: movement_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['IN', 'OUT']
+
+      - name: quantity
+        tests:
+          - not_null
+
+      - name: signed_quantity
+        tests:
+          - not_null
