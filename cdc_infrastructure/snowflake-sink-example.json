@@ -1,0 +1,34 @@
+{
+  "name": "snowflake-cdc-sink",
+  "config": {
+    "name": "snowflake-cdc-sink",
+    "connector.class": "com.snowflake.kafka.connector.SnowflakeStreamingSinkConnector",
+    "tasks.max": "1",
+
+    "topics": "cdc.cdc_schema.customer,cdc.cdc_schema.supplier,cdc.cdc_schema.product,cdc.cdc_schema.sales_invoice,cdc.cdc_schema.sales_invoice_item,cdc.cdc_schema.purchase_bill,cdc.cdc_schema.purchase_bill_item,cdc.cdc_schema.inventory_movement",
+    "snowflake.topic2table.map": "cdc.cdc_schema.customer:CUSTOMER_CHANGES,cdc.cdc_schema.supplier:SUPPLIER_CHANGES,cdc.cdc_schema.product:PRODUCT_CHANGES,cdc.cdc_schema.sales_invoice:SALES_INVOICE_CHANGES,cdc.cdc_schema.sales_invoice_item:SALES_INVOICE_ITEM_CHANGES,cdc.cdc_schema.purchase_bill:PURCHASE_BILL_CHANGES,cdc.cdc_schema.purchase_bill_item:PURCHASE_BILL_ITEM_CHANGES,cdc.cdc_schema.inventory_movement:INVENTORY_MOVEMENT_CHANGES",
+
+    "snowflake.url.name": "ACOUNT-USER.snowflakecomputing.com:443",
+    "snowflake.user.name": "USER-NAME",
+    "snowflake.private.key": "--PRIVATE-KEY--",
+    "snowflake.database.name": "DATABASE-NAME",
+    "snowflake.schema.name": "SCHEMA-NAME",
+    "snowflake.role.name": "ROLE-NAME",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.delete.tombstone.handling.mode": "rewrite",
+    "transforms.unwrap.add.fields": "op,table,lsn,source.ts_ms",
+
+    "snowflake.enable.schematization": "true",
+    "snowflake.streaming.validate.compatibility.with.classic": "false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "errors.tolerance": "none"
+  }
+}
