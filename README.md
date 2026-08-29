@@ -106,3 +106,42 @@ Local unit tests do not require live database credentials:
 ```bash
 uv run python -m unittest discover -s tests -v
 ```
+
+## CDC load test
+
+The automated customer load test exercises PostgreSQL through Debezium, Kafka,
+the Snowflake landing table, and the triggered raw-table merge. It clears the
+reserved customer IDs `900001` through `901000`, inserts 1,000 rows in one
+transaction, then updates 100 rows and deletes a separate 50 rows. The command
+prints a pass/fail summary and saves a JSON report under `reports/`.
+
+Run it from the ingestion project after the source and Snowflake sink connectors
+and Snowflake merge tasks are running:
+
+```bash
+cd airflow_astro/dags/ingestion_logic
+uv run cdc-load-test
+```
+
+From the repository root it can also be invoked with:
+
+```bash
+python -m airflow_astro.dags.ingestion_logic.ingestion.load_test_cli
+```
+
+The existing PostgreSQL and Snowflake variables in `.env` are reused. Optional
+load-test settings are:
+
+```ini
+KAFKA_CONNECT_URL=http://localhost:8083
+LOAD_TEST_LANDING_SCHEMA=CDC_LANDING
+LOAD_TEST_TIMEOUT_SECONDS=300
+LOAD_TEST_POLL_INTERVAL_SECONDS=1
+LOAD_TEST_CLEANUP_QUIET_SECONDS=5
+LOAD_TEST_REPORT_DIR=reports
+```
+
+The configured Snowflake role needs `SELECT` on the landing and raw customer
+tables and `DELETE` on the reserved raw-table range. A run exits nonzero on a
+failed assertion, timeout, database error, unavailable Connect REST API, or a
+connector/task that is not running.

@@ -16,3 +16,8 @@ airflow.db
 
 **/.astro/dbt_metadata.json
 **/.astro/manifest.slim.json
+
+cdc_infrastructure/secrets/
+cdc_infrastructure/snowflake-sink.json
+cdc_infrastructure/connectors/
+reports/
