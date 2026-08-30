@@ -3,8 +3,9 @@ from .tables import TableSpec
 
 CHECKPOINT_TABLE = "INGESTION_CHECKPOINTS"
 
-
+#this to get the tables that we want to ingest 
 def postgres_extract_sql(spec: TableSpec, schema: str, first_run: bool) -> str:
+    """Generate SQL to extract data from a PostgreSQL table that didnt run before or that has been updated since the last run."""
     columns = ", ".join(spec.all_columns)
     if first_run:
         predicate = "updated_at <= %(upper_bound)s"
