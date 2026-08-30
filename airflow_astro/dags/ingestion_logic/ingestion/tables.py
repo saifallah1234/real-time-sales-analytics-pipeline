@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True) #hedha bech ykhalik t3ml instance mta3 class TableSpec immutable, ma tnajmch tbadl l attributes mta3ha ba3d ma t3mlha instance
+
 class TableSpec:
     name: str
     primary_key: str
@@ -9,7 +10,7 @@ class TableSpec:
 
     @property
     def all_columns(self) -> tuple[str, ...]:
-        return (*self.columns, "updated_at")
+        return (*self.columns, "updated_at") # hedha yaani ("columns_id", "name",...,"updated_at")
 
 
 TABLES: dict[str, TableSpec] = {
