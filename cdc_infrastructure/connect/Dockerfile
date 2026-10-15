@@ -9,7 +9,7 @@ RUN apk add --no-cache ca-certificates curl unzip \
         --output /tmp/snowflake-kafka-connector.zip \
         "${SNOWFLAKE_CONNECTOR_URL}" \
     && echo "${SNOWFLAKE_CONNECTOR_SHA256}  /tmp/snowflake-kafka-connector.zip" \
-        | sha256sum --check \
+        | sha256sum -c \
     && mkdir -p /opt/connectors \
     && unzip -q /tmp/snowflake-kafka-connector.zip -d /opt/connectors \
     && test -f "/opt/connectors/snowflakeinc-snowflake-kafka-connector-${SNOWFLAKE_CONNECTOR_VERSION}/lib/snowflake-kafka-connector-${SNOWFLAKE_CONNECTOR_VERSION}.jar"

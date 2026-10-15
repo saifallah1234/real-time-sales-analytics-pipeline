@@ -356,6 +356,51 @@ The Airflow project contains:
 Start it with `astro dev start` from `airflow_astro/` after configuring the Airflow
 Snowflake connection and required environment variables.
 
+## Monitoring with Grafana
+
+A collector records pipeline health checks in PostgreSQL
+(`monitoring.check_results`), and a provisioned Grafana dashboard reads them. The
+collector needs only PostgreSQL and the Kafka Connect REST API, so it keeps
+reporting when Snowflake is unreachable. A broken Snowflake sink then shows up as
+a failing connector check.
+
+| Check | Source | Fails / warns when |
+|---|---|---|
+| `kafka_connect_reachable` | Kafka Connect REST | the REST API does not answer |
+| `connector_status` | `/connectors?expand=status` | an expected connector is missing, a connector or task is `FAILED` or has no tasks (warns on `PAUSED`/`UNASSIGNED`) |
+| `replication_slot_lag` | `pg_replication_slots` | a logical slot is inactive or invalidated (fail), or its lag exceeds `MONITOR_SLOT_LAG_WARN_BYTES` (warn) |
+| `row_count` | `cdc_schema.<table>` | a source table is missing (fail) or empty (warn) |
+| `table_freshness` | `max(updated_at)` | `updated_at` is missing, or the newest row is older than `MONITOR_FRESHNESS_WARN_SECONDS` (disabled by default) |
+
+`docker compose up -d` starts Grafana at <http://localhost:3002> (`admin` /
+`admin`) with the **CDC Pipeline Health** dashboard as its home page. Port 3000
+is left free for Marquez.
+
+`postgres/init/04_monitoring.sql` creates the `monitoring` schema and a read-only
+`grafana_reader` login. It runs automatically only on a new PostgreSQL volume.
+Apply it manually to an existing volume:
+
+```powershell
+Get-Content -Raw postgres/init/04_monitoring.sql | docker exec -i cdc_postgres psql -U postgres -d cdc_project
+```
+
+```bash
+docker exec -i cdc_postgres psql -U postgres -d cdc_project < postgres/init/04_monitoring.sql
+```
+
+Collect checks once, or continuously from the host:
+
+```bash
+uv run --project airflow_astro/dags/ingestion_logic cdc-monitor
+uv run --project airflow_astro/dags/ingestion_logic cdc-monitor --interval 30
+```
+
+In Airflow, `monitoring_dag` runs the same collector every five minutes. Failing
+checks are recorded for the dashboard and do not fail the task. From the Astro
+containers, set `PG_HOST=host.docker.internal`, `PG_PORT=5433`, and
+`KAFKA_CONNECT_URL=http://host.docker.internal:8083`. Results older than
+`MONITOR_RETENTION_DAYS` are purged on each run.
+
 ## Test and performance results
 
 ### Credential-free unit tests
@@ -427,6 +472,7 @@ your environment and retain its generated JSON report for comparison.
 |-- postgres/init/                       # schema, seed data, updated_at triggers
 |-- cdc_infrastructure/                  # connector image and configurations
 |-- snowflake/                           # Snowflake bootstrap, streams, merge tasks
+|-- monitoring/grafana/                  # Grafana data source and dashboard provisioning
 |-- airflow_astro/dags/                  # Airflow orchestration
 |-- airflow_astro/dags/ingestion_logic/  # Python loader and CDC load test
 |-- cdc_analytics/                       # dbt models, tests, and macros
