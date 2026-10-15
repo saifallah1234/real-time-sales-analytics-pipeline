@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 cdc-ingest = "ingestion.cli:main"
 cdc-load-test = "ingestion.load_test_cli:main"
+cdc-monitor = "ingestion.monitor_cli:main"
 
 [build-system]
 requires = ["hatchling"]
