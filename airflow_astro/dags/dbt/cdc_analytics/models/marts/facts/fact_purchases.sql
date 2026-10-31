@@ -4,9 +4,7 @@ select
     li.product_id,
     b.supplier_id,
 
-    to_number(
-        to_char(cast(b.bill_date as date), 'YYYYMMDD')
-    ) as bill_date_key,
+    {{ date_key('b.bill_date') }} as bill_date_key,
 
     li.quantity,
     li.unit_price,

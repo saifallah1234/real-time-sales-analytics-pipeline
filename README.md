@@ -37,12 +37,11 @@ flowchart LR
     DBT[dbt<br/>staging + intermediate]
     MART[(Analytics marts<br/>dimensions + facts)]
     POLL[Python timestamp loader<br/>cdc-ingest]
-    AIRFLOW[Airflow<br/>ingestion_dag / dbt_dag]
+    AIRFLOW[Airflow<br/>dbt_dag]
 
     PG --> WAL --> DBZ --> K --> SINK --> LAND --> STREAM --> TASK --> RAW
     RAW --> DBT --> MART
     PG -. optional fallback .-> POLL -. insert/update MERGE .-> RAW
-    AIRFLOW -. orchestrates .-> POLL
     AIRFLOW -. schedules .-> DBT
 ```
 
@@ -340,21 +339,31 @@ ORDER BY SOURCE_TABLE;
 
 ### dbt and Airflow
 
-Local dbt execution requires a `cdc_analytics` profile in `~/.dbt/profiles.yml`:
+> The dbt project now targets **Amazon Redshift** (AWS deployment in progress under
+> `deploy/aws/`). The Snowflake version of the dbt project and the timestamp-loader DAG
+> are preserved at git tag `snowflake-final`.
+
+The only dbt project is `airflow_astro/dags/dbt/cdc_analytics/`. Its single source is the
+Redshift streaming view `cdc_landing.cdc_events` (one row per Debezium event, all tables);
+the `current_state` macro rebuilds each table's current rows in the staging views. The
+expected event shape is documented in `models/staging/sources.yml`.
+
+Local dbt execution requires a Redshift `cdc_analytics` profile in `~/.dbt/profiles.yml`:
 
 ```bash
-uv run --project airflow_astro/dags/ingestion_logic dbt build --project-dir .
+uv run --project airflow_astro/dags/ingestion_logic dbt deps --project-dir airflow_astro/dags/dbt/cdc_analytics
+uv run --project airflow_astro/dags/ingestion_logic dbt build --project-dir airflow_astro/dags/dbt/cdc_analytics
 ```
 
-The Airflow project contains:
+`dbt_dag` (Astronomer Cosmos, every 15 minutes) reads the Airflow connection
+`redshift_conn`. Define it in `airflow_astro/.env` (git-ignored), then run
+`astro dev start` from `airflow_astro/`:
 
-- `ingestion_dag`: runs the timestamp loader daily and triggers `dbt_dag` after a
-  successful load;
-- `dbt_dag`: uses Astronomer Cosmos and a `snowflake_conn` Airflow connection, and
-  is also scheduled every 15 minutes.
+```bash
+AIRFLOW_CONN_REDSHIFT_CONN='redshift://<user>:<password>@<workgroup-endpoint>:5439/dev'
+```
 
-Start it with `astro dev start` from `airflow_astro/` after configuring the Airflow
-Snowflake connection and required environment variables.
+Pause `dbt_dag` whenever the AWS stack is destroyed.
 
 ## Monitoring with Grafana
 
@@ -475,7 +484,7 @@ your environment and retain its generated JSON report for comparison.
 |-- monitoring/grafana/                  # Grafana data source and dashboard provisioning
 |-- airflow_astro/dags/                  # Airflow orchestration
 |-- airflow_astro/dags/ingestion_logic/  # Python loader and CDC load test
-|-- cdc_analytics/                       # dbt models, tests, and macros
+|-- airflow_astro/dags/dbt/cdc_analytics/ # dbt models, tests, and macros (Redshift)
 `-- tests/                               # credential-free Python unit tests
 ```
 

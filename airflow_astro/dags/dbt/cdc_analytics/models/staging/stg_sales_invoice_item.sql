@@ -1,21 +1,19 @@
 with source as (
-
-    select *
-    from {{ source('postgres_raw', 'sales_invoice_item') }}
+    {{ current_state('sales_invoice_item', 'item_id') }}
 ),
 
 cleaned as (
     select
-        cast(item_id as integer)                 as item_id,
-        cast(invoice_id as integer)              as invoice_id,
-        cast(product_id as integer)              as product_id,
-        cast(quantity as integer)                as quantity,
-        cast(unit_price as number(10, 2))        as unit_price,
-        cast(discount as number(10, 2))          as discount,
-        {{discounted_price('unit_price * quantity', 'discount')}} as total_price_with_discount,
-        cast(created_at as timestamp_ntz)        as created_at
+        src.payload.item_id::integer                           as item_id,
+        src.payload.invoice_id::integer                        as invoice_id,
+        src.payload.product_id::integer                        as product_id,
+        src.payload.quantity::integer                          as quantity,
+        src.payload.unit_price::varchar::decimal(10, 2)        as unit_price,
+        src.payload.discount::varchar::decimal(10, 2)          as discount,
+        {{ discounted_price('unit_price * quantity', 'discount') }} as total_price_with_discount,
+        {{ epoch_ms_to_timestamp('src.payload.created_at') }}  as created_at
 
-    from source
+    from source as src
 )
 
 select *

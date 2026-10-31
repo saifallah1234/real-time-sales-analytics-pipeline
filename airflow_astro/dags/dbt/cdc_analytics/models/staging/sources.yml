@@ -1,32 +1,27 @@
 version: 2
 
 sources:
-  - name: postgres_raw
-    database: CDC_DATABASE
-    schema: RAW_DATA
-    description: "Raw tables manually extracted from PostgreSQL."
+  - name: cdc_landing
+    schema: cdc_landing
+    description: >
+      Redshift streaming materialized view over the single Kinesis stream `cdc_events`.
+      Debezium Server routes all 12 cdc_schema tables to that stream (ByLogicalTableRouter),
+      unwraps each event (ExtractNewRecordState, add.fields=op,lsn,source.ts_ms,table,
+      delete.handling.mode=rewrite) and sends flat JSON without schemas
+      (decimal.handling.mode=string, time.precision.mode=connect, tombstones.on.delete=false). Created by:
+
+        CREATE MATERIALIZED VIEW cdc_landing.cdc_events AUTO REFRESH YES AS
+        SELECT approximate_arrival_timestamp, json_parse(kinesis_data) AS payload
+        FROM kinesis_schema."cdc_events"
+        WHERE can_json_parse(kinesis_data);
 
     tables:
-      - name: customer
-        identifier: CUSTOMER
-
-      - name: supplier
-        identifier: SUPPLIER
-
-      - name: product
-        identifier: PRODUCT
-
-      - name: sales_invoice
-        identifier: SALES_INVOICE
-
-      - name: sales_invoice_item
-        identifier: SALES_INVOICE_ITEM
-
-      - name: purchase_bill
-        identifier: PURCHASE_BILL
-
-      - name: purchase_bill_item
-        identifier: PURCHASE_BILL_ITEM
-
-      - name: inventory_movement
-        identifier: INVENTORY_MOVEMENT
+      - name: cdc_events
+        description: "One row per change event, all tables. Staging rebuilds current state via the current_state macro."
+        columns:
+          - name: approximate_arrival_timestamp
+            description: "Kinesis arrival time; last tie-breaker when ordering events."
+          - name: payload
+            description: >
+              SUPER row: the table's columns plus __op (c/u/d/r), __lsn, __source_ts_ms,
+              __table (source table name) and __deleted ('true' for delete events).

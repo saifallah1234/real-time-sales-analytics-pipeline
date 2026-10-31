@@ -1,19 +1,20 @@
 import os
 
 from cosmos import DbtDag, ExecutionConfig, ProfileConfig, ProjectConfig, RenderConfig
-from cosmos.profiles import SnowflakeUserPasswordProfileMapping
+from cosmos.profiles import RedshiftUserPasswordProfileMapping
 
 
+# redshift_conn: set AIRFLOW_CONN_REDSHIFT_CONN in airflow_astro/.env (see README); dbname comes from the URI path.
 profile_config = ProfileConfig(
     profile_name="cdc_analytics",
     target_name="dev",
-    profile_mapping=SnowflakeUserPasswordProfileMapping(
-        conn_id="snowflake_conn", 
-        profile_args={"database": "CDC_DATABASE", "schema": "RAW_DATA"},
+    profile_mapping=RedshiftUserPasswordProfileMapping(
+        conn_id="redshift_conn",
+        profile_args={"schema": "analytics"},
     )
 )
 
-dbt_snowflake_dag = DbtDag(
+dbt_redshift_dag = DbtDag(
     project_config=ProjectConfig("/usr/local/airflow/dags/dbt/cdc_analytics",),
     operator_args={"install_deps": True},
     profile_config=profile_config,

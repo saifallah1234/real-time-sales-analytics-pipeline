@@ -1,19 +1,17 @@
 with source as (
-
-    select *
-    from {{ source('postgres_raw', 'supplier') }}
+    {{ current_state('supplier', 'supplier_id') }}
 ),
 
 cleaned as (
     select
-        cast(supplier_id as integer)             as supplier_id,
-        trim(name)                              as name,
-        trim(contact_name)                      as contact_name,
-        lower(trim(contact_email))              as contact_email,
-        trim(contact_phone)                     as contact_phone,
-        cast(created_at as timestamp_ntz)       as created_at
+        src.payload.supplier_id::integer                       as supplier_id,
+        trim(src.payload.name::varchar)                        as name,
+        trim(src.payload.contact_name::varchar)                as contact_name,
+        lower(trim(src.payload.contact_email::varchar))        as contact_email,
+        trim(src.payload.contact_phone::varchar)               as contact_phone,
+        {{ epoch_ms_to_timestamp('src.payload.created_at') }}  as created_at
 
-    from source
+    from source as src
 )
 
 select *

@@ -1,19 +1,17 @@
 with source as (
-
-    select *
-    from {{ source('postgres_raw', 'inventory_movement') }}
+    {{ current_state('inventory_movement', 'movement_id') }}
 ),
 
 cleaned as (
     select
-        cast(movement_id as integer)             as movement_id,
-        cast(product_id as integer)              as product_id,
-        upper(trim(movement_type))               as movement_type,
-        cast(quantity as integer)                as quantity,
-        cast(movement_date as timestamp_ntz)     as movement_date,
-        cast(created_at as timestamp_ntz)        as created_at
+        src.payload.movement_id::integer                          as movement_id,
+        src.payload.product_id::integer                           as product_id,
+        upper(trim(src.payload.movement_type::varchar))           as movement_type,
+        src.payload.quantity::integer                             as quantity,
+        {{ epoch_ms_to_timestamp('src.payload.movement_date') }}  as movement_date,
+        {{ epoch_ms_to_timestamp('src.payload.created_at') }}     as created_at
 
-    from source
+    from source as src
 )
 
 select *

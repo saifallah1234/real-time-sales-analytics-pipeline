@@ -3,7 +3,7 @@ select
     p.name,
     p.description,
     p.unit_price,
-    inv.balance_quantity,
+    inv.balance_quantity
 from 
     {{ref('stg_product')}} as p
 left join 
