@@ -11,6 +11,15 @@ module "ec2_instance" {
   # The module creates a security group: no inbound rules, all outbound (needed for SSM + downloads).
   security_group_name = "cdc-debezium-sg"
 
+  # Installs Debezium Server and starts it as a systemd service on first boot.
+  user_data = templatefile("${path.module}/debezium_user_data.sh.tftpl", {
+    debezium_version = "3.7.0.Final"
+    db_host          = module.db.db_instance_address
+    properties       = file("${path.module}/../debezium/application.properties")
+  })
+  # A changed script or config rebuilds the instance (offsets are lost; Debezium resumes from the slot).
+  user_data_replace_on_change = true
+
   metadata_options = {
     http_tokens = "required"
   }

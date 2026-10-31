@@ -26,3 +26,16 @@ output "db_password" {
 output "kinesis_stream_name" {
   value = aws_kinesis_stream.cdc_events.name
 }
+
+output "redshift_endpoint" {
+  value = aws_redshiftserverless_workgroup.cdc.endpoint[0].address
+}
+
+output "redshift_password" {
+  value     = random_password.redshift.result
+  sensitive = true
+}
+
+output "redshift_kinesis_role_arn" {
+  value = aws_iam_role.redshift_kinesis.arn
+}

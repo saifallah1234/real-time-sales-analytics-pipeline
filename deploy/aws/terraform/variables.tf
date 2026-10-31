@@ -9,3 +9,8 @@ variable "cdc_tag" {
   type        = string
   default     = "cdc"
 }
+
+variable "my_ip" {
+  description = "Your public IP as a /32 CIDR, allowed to reach Redshift on 5439 (set in a git-ignored terraform.tfvars)"
+  type        = string
+}
