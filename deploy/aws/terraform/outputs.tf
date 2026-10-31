@@ -22,3 +22,7 @@ output "db_password" {
   value     = random_password.db.result
   sensitive = true
 }
+
+output "kinesis_stream_name" {
+  value = aws_kinesis_stream.cdc_events.name
+}
