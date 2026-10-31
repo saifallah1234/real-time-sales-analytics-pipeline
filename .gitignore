@@ -10,3 +10,9 @@ reports/
 cdc_infrastructure/connectors/
 cdc_infrastructure/secrets/
 cdc_infrastructure/snowflake-sink.json
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
