@@ -7,7 +7,7 @@ module "ec2_instance" {
   instance_type        = "t3.small"
   subnet_id            = module.vpc.public_subnets[0]
   iam_instance_profile = aws_iam_instance_profile.debezium_ec2.name
-  ami = data.aws_ami.amazone_linux_2.id
+  ami                  = data.aws_ami.amazone_linux_2.id
   # The module creates a security group: no inbound rules, all outbound (needed for SSM + downloads).
   security_group_name = "cdc-debezium-sg"
 
