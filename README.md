@@ -355,7 +355,7 @@ uv run --project airflow_astro/dags/ingestion_logic dbt deps --project-dir airfl
 uv run --project airflow_astro/dags/ingestion_logic dbt build --project-dir airflow_astro/dags/dbt/cdc_analytics
 ```
 
-`dbt_dag` (Astronomer Cosmos, every 15 minutes) reads the Airflow connection
+`dbt_dag` (Astronomer Cosmos, every 2 hours) reads the Airflow connection
 `redshift_conn`. Define it in `airflow_astro/.env` (git-ignored), then run
 `astro dev start` from `airflow_astro/`:
 

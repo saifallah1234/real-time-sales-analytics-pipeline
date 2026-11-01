@@ -16,3 +16,5 @@ cdc_infrastructure/snowflake-sink.json
 *.tfstate.*
 *.tfvars
 crash.log
+tfplan
+*.backup
