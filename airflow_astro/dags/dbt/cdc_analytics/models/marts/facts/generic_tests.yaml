@@ -169,3 +169,191 @@ models:
       - name: signed_quantity
         tests:
           - not_null
+
+  - name: fct_transactions
+    description: >
+      One row per financial transaction, every status. For net activity or card spend,
+      filter status = 'Posted' and transaction_type <> 'Reversal' (Reversed originals and
+      their Reversal rows cancel out). Failure rate = Failed / all non-Pending.
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Deposit', 'Withdrawal', 'Transfer', 'Card Payment', 'Invoice Payment', 'Bill Payment', 'Reversal']
+
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Pending', 'Posted', 'Failed', 'Reversed']
+
+      - name: amount
+        tests:
+          - not_null
+
+      - name: transaction_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: card_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_card')
+                field: card_id
+
+      - name: invoice_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_sales_invoice')
+                field: invoice_id
+
+      - name: bill_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_purchase_bill')
+                field: bill_id
+
+      - name: reverses_transaction_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_financial_transaction')
+                field: transaction_id
+
+      - name: from_account_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+
+      - name: to_account_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+
+  - name: fct_ledger_entries
+    description: "One row per ledger entry. signed_amount is +amount for Credit, -amount for Debit."
+    columns:
+      - name: entry_id
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_financial_transaction')
+                field: transaction_id
+
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+
+      - name: entry_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: direction
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Debit', 'Credit']
+
+      - name: signed_amount
+        tests:
+          - not_null
+
+  - name: fct_receivables
+    description: "One row per sales invoice: amount due vs Posted invoice payments."
+    columns:
+      - name: invoice_id
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_id
+
+      - name: invoice_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: is_status_mismatch
+        tests:
+          - accepted_values:
+              arguments:
+                values: [false]
+                quote: false
+              config:
+                severity: warn
+
+  - name: fct_payables
+    description: "One row per purchase bill: recorded paid_amount vs Posted bill payments."
+    columns:
+      - name: bill_id
+        tests:
+          - not_null
+          - unique
+
+      - name: supplier_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_supplier')
+                field: supplier_id
+
+      - name: bill_date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: is_paid_amount_mismatch
+        tests:
+          - accepted_values:
+              arguments:
+                values: [false]
+                quote: false
+              config:
+                severity: warn

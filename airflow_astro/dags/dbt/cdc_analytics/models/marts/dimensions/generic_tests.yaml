@@ -126,3 +126,85 @@ models:
       - name: day_name
         tests:
           - not_null
+
+  - name: dim_account
+    description: "One row per account with its current ledger balance (credits - debits)."
+    columns:
+      - name: account_id
+        tests:
+          - not_null
+          - unique
+
+      - name: account_number
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_id
+
+      - name: supplier_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_supplier')
+                field: supplier_id
+
+      - name: account_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Checking', 'Savings', 'Business', 'Operating', 'Clearing']
+
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Active', 'Frozen', 'Closed']
+
+      - name: current_balance
+        tests:
+          - not_null
+
+  - name: dim_card
+    description: "One row per payment card. Only the last 4 digits are kept."
+    columns:
+      - name: card_id
+        tests:
+          - not_null
+          - unique
+
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+
+      - name: card_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Credit', 'Debit']
+
+      - name: brand
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Visa', 'Mastercard']
+
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Active', 'Blocked', 'Expired']

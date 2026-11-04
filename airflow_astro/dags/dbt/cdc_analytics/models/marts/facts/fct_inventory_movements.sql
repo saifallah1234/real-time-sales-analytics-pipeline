@@ -2,9 +2,7 @@ select
     movement_id,
     product_id,
 
-    to_number(
-        to_char(cast(movement_date as date), 'YYYYMMDD')
-    ) as movement_date_key,
+    {{ date_key('movement_date') }} as movement_date_key,
 
     movement_type,
     quantity,

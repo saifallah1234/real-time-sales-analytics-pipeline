@@ -1,19 +1,17 @@
 with source as (
-
-    select *
-    from {{ source('postgres_raw', 'purchase_bill_item') }}
+    {{ current_state('purchase_bill_item', 'item_id') }}
 ),
 
 cleaned as (
     select
-        cast(item_id as integer)                 as item_id,
-        cast(bill_id as integer)                 as bill_id,
-        cast(product_id as integer)              as product_id,
-        cast(quantity as integer)                as quantity,
-        cast(unit_price as number(10, 2))        as unit_price,
-        cast(created_at as timestamp_ntz)        as created_at
+        src.payload.item_id::integer                           as item_id,
+        src.payload.bill_id::integer                           as bill_id,
+        src.payload.product_id::integer                        as product_id,
+        src.payload.quantity::integer                          as quantity,
+        src.payload.unit_price::varchar::decimal(10, 2)        as unit_price,
+        {{ epoch_ms_to_timestamp('src.payload.created_at') }}  as created_at
 
-    from source
+    from source as src
 )
 
 select *

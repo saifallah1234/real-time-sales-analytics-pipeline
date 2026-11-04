@@ -1,18 +1,16 @@
 with source as (
-
-    select *
-    from {{ source('postgres_raw', 'product') }}
+    {{ current_state('product', 'product_id') }}
 ),
 
 cleaned as (
     select
-        cast(product_id as integer)              as product_id,
-        trim(name)                              as name,
-        trim(description)                       as description,
-        cast(unit_price as number(10, 2))       as unit_price,
-        cast(created_at as timestamp_ntz)       as created_at
+        src.payload.product_id::integer                        as product_id,
+        trim(src.payload.name::varchar)                        as name,
+        trim(src.payload.description::varchar)                 as description,
+        src.payload.unit_price::varchar::decimal(10, 2)        as unit_price,
+        {{ epoch_ms_to_timestamp('src.payload.created_at') }}  as created_at
 
-    from source
+    from source as src
 )
 
 select *

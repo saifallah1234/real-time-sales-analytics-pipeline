@@ -1,0 +1,45 @@
+#!/bin/bash
+# Boot script for cdc-debezium: installs Debezium Server and runs it as a systemd service.
+# Rendered by templatefile() in ec2.tf. Log: /var/log/cloud-init-output.log; service: journalctl -u debezium.
+set -euxo pipefail
+
+dnf install -y java-21-amazon-corretto-headless
+
+curl -fsSL "https://repo1.maven.org/maven2/io/debezium/debezium-server-dist/${debezium_version}/debezium-server-dist-${debezium_version}.tar.gz" \
+  | tar xz -C /opt
+cd /opt/debezium-server
+# 3.7 ships the SMTs (unwrap, route) outside lib/.
+cp connectors/debezium-connector-dse/debezium-connect-plugins-*.jar lib/
+mkdir -p data
+
+# Quoted heredoc: keeps the $${DB_HOST}/$${DB_PASSWORD} placeholders for Quarkus to expand at runtime.
+cat > config/application.properties <<'PROPS'
+${properties}
+PROPS
+
+install -m 600 /dev/null /etc/debezium.env
+cat > /etc/debezium.env <<ENV
+DB_HOST=${db_host}
+DB_PASSWORD=saif
+ENV
+
+# Restart forever: Debezium exits until the schema and publication are loaded by hand.
+cat > /etc/systemd/system/debezium.service <<'UNIT'
+[Unit]
+Description=Debezium Server (RDS Postgres -> Kinesis cdc_events)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/debezium-server
+EnvironmentFile=/etc/debezium.env
+ExecStart=/opt/debezium-server/run.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now debezium

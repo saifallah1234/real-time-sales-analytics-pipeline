@@ -4,9 +4,7 @@ select
     li.product_id,
     i.customer_id,
 
-    to_number(
-        to_char(cast(i.invoice_date as date), 'YYYYMMDD')
-    ) as invoice_date_key,
+    {{ date_key('i.invoice_date') }} as invoice_date_key,
 
     li.quantity,
     li.unit_price,
